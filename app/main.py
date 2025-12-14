@@ -1,7 +1,10 @@
 from fastapi import FastAPI
+from app.database import Base, engine
 from app.routers import products
 from app.routers import customer
 from app.routers import user
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
