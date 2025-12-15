@@ -11,4 +11,5 @@ app = FastAPI()
 app.include_router(products.router)
 app.include_router(customer.router)
 app.include_router(user.router)
+app.include_router(order.router)
 
