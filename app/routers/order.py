@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import order
 from ..schemas import order_schema
+from ..models.order_item import OrderItem
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -91,3 +92,31 @@ def delete_item(id: int, db: Session = Depends(get_db)):
     db.delete(item)
     db.commit()
     return {"message": "Deleted"}
+
+# advanced query
+@router.get("/orders/report-full")
+def order_full_report(db: Session = Depends(get_db)):
+    stmt = (
+        select(
+            Order.id.label("order_id"),
+            Customer.name.label("customer_name"),
+            OrderItem.quantity,
+            OrderItem.price,
+            Order.total_amount
+        )
+        .join(Customer, Order.customer_id == Customer.id)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+    )
+
+    rows = db.execute(stmt).all()
+
+    return [
+        {
+            "order_id": r.order_id,
+            "customer_name": r.customer_name,
+            "quantity": r.quantity,
+            "price": r.price,
+            "total_amount": r.total_amount
+        }
+        for r in rows
+    ]
