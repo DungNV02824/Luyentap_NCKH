@@ -56,3 +56,34 @@ def delete_product(id: int, db: Session = Depends(get_db)):
     db.delete(product)
     db.commit()
     return {"message": "Deleted successfully"}
+
+#pagination
+@router.get("/", response_model=list[ProductResponse])
+def get_products(
+    page: int = 1,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    offset = (page - 1) * limit
+    return crud.get_all(db).offset(offset).limit(limit).all()
+
+#filtering
+@router.get("/filter", response_model=list[ProductResponse])
+def filter_products(
+    min_price: float = 0,
+    max_price: float = 1e9,
+    sort: str = "asc",
+    db: Session = Depends(get_db)
+):
+    query = crud.get_all(db).filter(
+        Product.price >= min_price,
+        Product.price <= max_price
+    )
+
+    if sort == "desc":
+        query = query.order_by(Product.price.desc())
+    else:
+        query = query.order_by(Product.price.asc())
+
+    return query.all()
+
