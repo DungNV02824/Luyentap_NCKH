@@ -5,6 +5,10 @@ from ..models import products
 from ..schemas import product_schema
 from ..database import get_db  
 from ..core.exceptions import not_found
+from ..schemas.product_schema import ProductCreate, ProductResponse
+from ..crud import product as crud
+from ..core.deps import require_admin
+
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -87,3 +91,14 @@ def filter_products(
 
     return query.all()
 
+#create product with admin role
+@router.post(
+    "/",
+    response_model=ProductResponse,
+    dependencies=[Depends(require_admin)]
+)
+def create_product(
+    product: ProductCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create(db, product)
