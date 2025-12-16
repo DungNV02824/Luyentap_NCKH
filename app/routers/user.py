@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..schemas import user_schema
 from ..models.user import User as users
+from fastapi import UploadFile, File #Upload file
+from ..core.deps import get_current_user
+import os
 
 # Moi duong dan se bau dau bang user va co ten Users
 router = APIRouter(prefix ="/users", tags =["Users"])
@@ -55,3 +58,17 @@ def delete_user(id: int, db: Session = Depends(get_db)):
     db.delete(db_user)
     db.commit()
     return {"message":"Delete successfully"}
+
+#Upload file 
+@router.post("/upload/avatar")
+def upload_avatar(
+    file: UploadFile = File(...),
+    user = Depends(get_current_user)
+):
+    os.makedirs("uploads", exist_ok=True)
+    file_path = f"uploads/{user.id}_{file.filename}"
+
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+
+    return {"avatar": file_path}

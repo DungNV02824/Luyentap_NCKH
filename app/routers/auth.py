@@ -12,8 +12,11 @@ from ..core.jwt import (
     SECRET_KEY,
     ALGORITHM
 )
+from ..models.token_blacklist import TokenBlacklist
+from fastapi.security import OAuth2PasswordBearer
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
@@ -66,3 +69,13 @@ def refresh_token(refresh_token: str):
             "username": payload["username"]
         })
     }
+
+# logout
+@router.post("/logout")
+def logout(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    db.add(TokenBlacklist(token=token))
+    db.commit()
+    return {"message": "Logged out"}

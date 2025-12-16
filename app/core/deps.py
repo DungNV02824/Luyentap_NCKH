@@ -6,6 +6,7 @@ from ..models.user import User
 from ..core.jwt import SECRET_KEY, ALGORITHM
 from sqlalchemy.orm import Session
 from .deps import get_current_user
+from ..models.token_blacklist import TokenBlacklist
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -23,6 +24,8 @@ def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+    if db.query(TokenBlacklist).filter(TokenBlacklist.token == token).first():
+        raise HTTPException(status_code=401, detail="Token revoked")
 #admin role
 def require_admin(user = Depends(get_current_user)):
     if user.role != "admin":
