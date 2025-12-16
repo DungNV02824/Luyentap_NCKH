@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..models import products
 from ..schemas import product_schema
 from ..database import get_db  
+from ..core.exceptions import not_found
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -26,7 +27,7 @@ def get_products(db: Session = Depends(get_db)):
 def get_product(id: int, db: Session = Depends(get_db)):
     product = db.query(products.Product).filter(products.Product.id == id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        not_found("Product not found")
     return product
 
 @router.put("/{id}", response_model=product_schema.Product)
@@ -37,7 +38,7 @@ def update_product(
 ):
     product = db.query(products.Product).filter(products.Product.id == id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        not_found("Product not found")
 
     for key, value in updated.dict().items():
         setattr(product, key, value)
@@ -50,7 +51,8 @@ def update_product(
 def delete_product(id: int, db: Session = Depends(get_db)):
     product = db.query(products.Product).filter(products.Product.id == id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        not_found("Product not found")
+
     db.delete(product)
     db.commit()
     return {"message": "Deleted successfully"}
