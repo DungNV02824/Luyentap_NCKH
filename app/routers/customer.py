@@ -29,6 +29,7 @@ def get_customer(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
 
+# 1-N: customer - orders
 @router.get("/{id}/orders")
 def gert_orders_by_customer(id: int, db: Session = Depends(get_db)):
     customer = db.query(Customer).filter(Customers.id == id).first()

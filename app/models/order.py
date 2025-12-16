@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String , Float, DateTime, ForeignKey
 from ..database import Base
 from sqlalchemy.orm import relationship
-from datatime import datetime
+from datetime import datetime
 class Order(Base):
     __tablename__ = "orders"
 
@@ -18,3 +18,4 @@ class Order(Base):
 
     # Quan hệ ngược
     customer = relationship("Customer", back_populates="orders")
+    items = relationship("OrderItem", back_populates="order") 

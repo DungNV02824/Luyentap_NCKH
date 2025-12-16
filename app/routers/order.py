@@ -60,3 +60,34 @@ def delete_order(id: int, db: Session = Depends(get_db)):
     db.delete(ord)
     db.commit()
     return {"message": "Deleted successfully"}
+    @router.get("/orders/{id}/items")
+
+# 1-N: order - orderitem   
+@router.get("/orders/{id}/items")
+def get_order_items(id: int, db: Session = Depends(get_db)):
+    return db.query(OrderItem).filter(OrderItem.order_id == id).all()
+
+@router.post("/orders/{id}/items")
+def create_order_item(
+    id: int,
+    item: OrderItemCreate,
+    db: Session = Depends(get_db)
+):
+    new_item = OrderItem(
+        order_id=id,
+        product_id=item.product_id,
+        quantity=item.quantity,
+        price=item.price
+    )
+    db.add(new_item)
+    db.commit()
+    return new_item
+
+@router.delete("/items/{id}")
+def delete_item(id: int, db: Session = Depends(get_db)):
+    item = db.query(OrderItem).filter(OrderItem.id == id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Deleted"}
