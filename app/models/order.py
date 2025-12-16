@@ -18,3 +18,4 @@ class Order(Base):
 
     # Quan hệ ngược
     customer = relationship("Customer", back_populates="orders")
+    items = relationship("OrderItem", back_populates="order")
