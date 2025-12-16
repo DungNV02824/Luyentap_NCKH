@@ -14,6 +14,7 @@ class User(Base):
     username = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    role = Column(String, default="user")
     orders = relationship("Order", back_populates="owner")
 
 class Product(Base):
