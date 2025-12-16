@@ -5,7 +5,6 @@ from ..database import get_db
 from ..models.user import User
 from ..core.jwt import SECRET_KEY, ALGORITHM
 from sqlalchemy.orm import Session
-from .deps import get_current_user
 from ..models.token_blacklist import TokenBlacklist
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")

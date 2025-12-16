@@ -1,46 +1,49 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from ..database import get_db
-from ..models import order
-from ..schemas import order_schema
+from ..models.order import Order
 from ..models.order_item import OrderItem
+from ..models.customer import Customer
+
+from ..schemas.order_schema import OrderCreate, OrderResponse
+from ..schemas.order_item_schema import OrderItemCreate
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
-
-@router.post("/", response_model=order_schema.Order)
+@router.post("/", response_model=OrderResponse)
 def create_order(
-    order_data: order_schema.OrderCreate,
+    order_data: OrderCreate,
     db: Session = Depends(get_db)
 ):
-    db_order = order.Order(**order_data.dict())
+    db_order = Order(**order_data.dict())
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
     return db_order
 
 
-@router.get("/", response_model=list[order_schema.Order])
+@router.get("/", response_model=list[OrderResponse])
 def get_orders(db: Session = Depends(get_db)):
-    return db.query(order.Order).all()
+    return db.query(Order).all()
 
 
-@router.get("/{id}", response_model=order_schema.Order)
+@router.get("/{id}", response_model=OrderResponse)
 def get_order(id: int, db: Session = Depends(get_db)):
-    ord = db.query(order.Order).filter(order.Order.id == id).first()
+    ord = db.query(Order).filter(Order.id == id).first()
     if not ord:
         raise HTTPException(status_code=404, detail="Order not found")
     return ord
 
 
-@router.put("/{id}", response_model=order_schema.Order)
+@router.put("/{id}", response_model=OrderResponse)
 def update_order(
     id: int,
-    updated: order_schema.OrderCreate,
+    updated: OrderCreate,
     db: Session = Depends(get_db)
 ):
-    ord = db.query(order.Order).filter(order.Order.id == id).first()
+    ord = db.query(Order).filter(Order.id == id).first()
     if not ord:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -54,21 +57,21 @@ def update_order(
 
 @router.delete("/{id}")
 def delete_order(id: int, db: Session = Depends(get_db)):
-    ord = db.query(order.Order).filter(order.Order.id == id).first()
+    ord = db.query(Order).filter(Order.id == id).first()
     if not ord:
         raise HTTPException(status_code=404, detail="Order not found")
 
     db.delete(ord)
     db.commit()
     return {"message": "Deleted successfully"}
-    @router.get("/orders/{id}/items")
 
-# 1-N: order - orderitem   
-@router.get("/orders/{id}/items")
+# 1-N: order -> order items
+@router.get("/{id}/items")
 def get_order_items(id: int, db: Session = Depends(get_db)):
     return db.query(OrderItem).filter(OrderItem.order_id == id).all()
 
-@router.post("/orders/{id}/items")
+
+@router.post("/{id}/items")
 def create_order_item(
     id: int,
     item: OrderItemCreate,
@@ -82,7 +85,9 @@ def create_order_item(
     )
     db.add(new_item)
     db.commit()
+    db.refresh(new_item)
     return new_item
+
 
 @router.delete("/items/{id}")
 def delete_item(id: int, db: Session = Depends(get_db)):
@@ -93,8 +98,8 @@ def delete_item(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Deleted"}
 
-# advanced query
-@router.get("/orders/report-full")
+# advanced report
+@router.get("/report/full")
 def order_full_report(db: Session = Depends(get_db)):
     stmt = (
         select(
