@@ -30,6 +30,11 @@ def get_user_id(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code = 404,detail="User not found")
     return db_user
 
+# protected API 
+@router.get("/users/me")
+def get_me(user = Depends(get_current_user)):
+    return user
+
 @router.put("/{id}", response_model = user_schema.User)
 def update_user(id: int, update_user: user_schema.UserBase, db: Session = Depends(get_db)):
     db_update_user = db.query(users).filter(users.id == id).first()
